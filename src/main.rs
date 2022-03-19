@@ -9,7 +9,7 @@ fn main() {
     let mut db = data::Database::new();
 
 
-    if db.load_database("Database.txt") {
+    if db.load_database("Database.txt").is_some() {
         println!("Read {} database entries", db.size())
     }
     else {

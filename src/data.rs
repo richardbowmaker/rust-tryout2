@@ -3,6 +3,8 @@ use std::fmt;
 use std::fs::File;
 use std::io::{prelude::*, BufReader};
 
+
+
 pub struct Database {
     database: Vec<FootballResult>
 }
@@ -17,44 +19,25 @@ impl Database {
         self.database.len()
     }
 
-    pub fn load_database(&mut self, filename: &str) -> bool {
+    // returns number of records read
+    pub fn load_database(&mut self, filename: &str) -> Option<usize> {
 
-        let f = File::open(filename);
+        let file = File::open(filename).ok()?;
+        let reader = BufReader::new(file);
 
-        match f {
-            Ok(file) => {
-
-                let reader = BufReader::new(file);
-
-                for line in reader.lines() {
-                    if line.is_ok() {
-                        let fr = FootballResult::from_csv(&line.unwrap());
-                        match fr {
-                            Some (fr1) => {
-                                self.database.push(fr1);
-                            }
-                            None => {}
-                        }
-                    }
-                }
-
-                true
-            },
-            Err(_) => false
+        for line in reader.lines() {
+            // NB line can propagate Err<>, whereas from_csv() don't propagate None
+            if let Some(fr) = FootballResult::from_csv(&line.ok()?) {
+                self.database.push(fr);    
+            }
         }
 
-    
-        // if let Ok(lines) = read_lines(filename) {
-        //     for l in lines {
-        //         if let Ok(line) = l {
-        //             FootballResult::from_csv(line)
-        //         }
-        //     }
-        //     return true;
-        // }
-        // else {
-        //     return false;
-        // }
+        if self.database.len() > 0 {
+            Some(self.database.len())
+        }
+        else {
+            None
+        }
     }
 }
 
